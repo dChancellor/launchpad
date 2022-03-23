@@ -1,12 +1,11 @@
 import { LaunchpadMK2 } from 'launchpad.js';
 import { functionButton, centerButtons } from './src/definitions.js';
 import { generateRandomColor } from './src/helpers.js';
-import play from './src/plays.js';
+import { play, stop } from './src/plays.js';
 
 const board = new LaunchpadMK2();
 
 board.once('ready', (name) => {
-  // eslint-disable-next-line no-console
   console.log(`Connected to ${name}`);
   for (const note of centerButtons) {
     board.setButtonColor(note, generateRandomColor());
@@ -14,9 +13,14 @@ board.once('ready', (name) => {
 });
 
 board.on('buttonDown', (button) => {
-  // eslint-disable-next-line no-console
-  console.log(button, 'was pushed');
-  if (button === functionButton.reset) return play.stop(board);
-  if (button === functionButton.cornerSweep) return play.cornerSweep(board);
+  if (button === functionButton.reset) return stop();
+  if (button === functionButton.cornerSweep) return play.cornerSweeps(board);
   if (button === functionButton.firework) return play.fireworks(board);
+  if (button === functionButton.gameOfLife) return play.gameOfLife(board);
+  return debug(button);
 });
+
+const debug = (button) => {
+  // Insert any temporary debug needed here
+  console.log(button, 'was pushed');
+};
