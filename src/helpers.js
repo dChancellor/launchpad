@@ -1,6 +1,6 @@
 import { colors } from 'launchpad.js';
 import { cornerButtons, hexRef } from './definitions.js';
-import { edgeButtons } from './definitions.js';
+import { edgeButtons, cardinalNeighbors } from './definitions.js';
 import { stop } from './plays.js';
 const { colorFromHex } = colors;
 
@@ -16,7 +16,7 @@ export const generateRandomColor = () => {
   return colorFromHex(hex);
 };
 
-export const newPlay = (board, gameName, shouldWipe) => {
+export const resetBoard = (board, gameName, shouldWipe) => {
   console.log(`Starting ${gameName}`);
   stop(board, shouldWipe);
   const color = generateRandomColor();
@@ -27,7 +27,40 @@ export const newPlay = (board, gameName, shouldWipe) => {
   return { cells, color };
 };
 
-const animatedWipe = (board) => {};
+export const delay = (ms) => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
+
+export const animatedWipe = async (board, callback) => {
+  const origin = chooseRandomCorner();
+  const color = generateRandomColor();
+  let activeButtons = [];
+  activeButtons.push(origin);
+  let litButtons = new Set();
+  litButtons.add(origin);
+  board.setButtonColor(origin, color);
+
+  const sweep = setInterval(async () => {
+    let newButtons = [];
+    activeButtons.forEach((activeButton) => {
+      const { unlit } = checkNeighbors(activeButton, cardinalNeighbors, litButtons);
+      newButtons = [...newButtons, ...unlit];
+      newButtons.forEach((button) => litButtons.add(button));
+    });
+    if (newButtons.length === 0) {
+      clearInterval(sweep);
+      board.allOff();
+      await delay(500);
+      callback();
+    }
+    if (newButtons.length != 0) {
+      newButtons.forEach((button) => {
+        board.setButtonColor(button, color);
+      });
+    }
+    activeButtons = newButtons;
+  }, 100);
+};
 
 export const checkNeighbors = (button, requestedNeighbors, litButtons) => {
   const lit = [];
